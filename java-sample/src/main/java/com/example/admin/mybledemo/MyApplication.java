@@ -4,6 +4,8 @@ import android.app.Application;
 import android.bluetooth.le.ScanFilter;
 import android.os.ParcelUuid;
 
+import com.blankj.utilcode.util.Utils;
+
 import java.util.UUID;
 
 import cn.com.heaton.blelibrary.ble.Ble;
@@ -11,7 +13,6 @@ import cn.com.heaton.blelibrary.ble.BleLog;
 import cn.com.heaton.blelibrary.ble.model.BleDevice;
 import cn.com.heaton.blelibrary.ble.model.BleFactory;
 import cn.com.heaton.blelibrary.ble.utils.UuidUtils;
-import cn.com.superLei.aoparms.AopArms;
 
 
 /**
@@ -47,7 +48,7 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         mApplication = this;
-        AopArms.init(this);
+        Utils.init(this);
         initBle();
     }
 

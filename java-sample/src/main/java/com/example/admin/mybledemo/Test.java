@@ -7,10 +7,14 @@ import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Environment;
 import android.os.SystemClock;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.util.Log;
 
-import com.example.admin.mybledemo.aop.CheckConnect;
+import com.hjq.permissions.OnPermissionCallback;
+import com.hjq.permissions.XXPermissions;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,8 +34,6 @@ import cn.com.heaton.blelibrary.ble.queue.RequestTask;
 import cn.com.heaton.blelibrary.ble.utils.ByteUtils;
 import cn.com.heaton.blelibrary.ble.utils.CrcUtils;
 import cn.com.heaton.blelibrary.ota.OtaManager;
-import cn.com.superLei.aoparms.annotation.Permission;
-import cn.com.superLei.aoparms.annotation.Retry;
 
 public class Test extends AppCompatActivity {
     private static final String TAG = "Test";
@@ -42,23 +44,29 @@ public class Test extends AppCompatActivity {
     /**
      * OTA升级
      */
-    @Permission(value = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-            requestCode = REQUEST_PERMISSION_WRITE,
-            rationale = "读写SD卡权限被拒绝,将会影响OTA升级功能哦!")
     public void updateOta() {
-        //此处为了方便把OTA升级文件直接放到assets文件夹下，拷贝到/aceDownload/文件夹中  以便使用
-        Utils.copyOtaFile(Test.this, path);
-        SystemClock.sleep(200);
-        File file = new File(path + Constant.Constance.OTA_FILE_PATH);
-        OtaManager mOtaManager = new OtaManager(Test.this);
-        boolean result = mOtaManager.startOtaUpdate(file, ble.getConnectedDevices().get(0), ble);
-        BleLog.e("OTA升级结果:", result + "");
+        XXPermissions.with(MyApplication.getInstance())
+                .permission(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .request(new OnPermissionCallback() {
+                    @Override
+                    public void onGranted(@NonNull List<String> permissions, boolean allGranted) {
+                        if (allGranted) {
+                            //此处为了方便把OTA升级文件直接放到assets文件夹下，拷贝到/aceDownload/文件夹中  以便使用
+//                            Utils.copyOtaFile(Test.this, path);
+//                            SystemClock.sleep(200);
+//                            File file = new File(path + Constant.Constance.OTA_FILE_PATH);
+//                            OtaManager mOtaManager = new OtaManager(Test.this);
+//                            boolean result = mOtaManager.startOtaUpdate(file, ble.getConnectedDevices().get(0), ble);
+//                            BleLog.e("OTA升级结果:", result + "");
+                        }
+                    }
+                });
     }
 
     /**
      * 发送数据
      */
-    @Retry(count = 3, delay = 100, asyn = true)
+//    @Retry(count = 3, delay = 100, asyn = true)
     private void sendData() {
         byte[] data = new byte[20];
         data[0] = 0x01;
@@ -87,7 +95,7 @@ public class Test extends AppCompatActivity {
      *
      * @param device 设备对象
      */
-    @Retry(count = 3, delay = 100, asyn = true)
+//    @Retry(count = 3, delay = 100, asyn = true)
     public boolean read(BleDevice device) {
         return ble.read(device, new BleReadCallback<BleDevice>() {
             @Override
@@ -195,7 +203,6 @@ public class Test extends AppCompatActivity {
         }
     }
 
-    @CheckConnect //检查是否连接
     private void writeQueue() {
         List<BleDevice> connectedDevices = ble.getConnectedDevices();
         for (int i = 0; i < 10; i++) {

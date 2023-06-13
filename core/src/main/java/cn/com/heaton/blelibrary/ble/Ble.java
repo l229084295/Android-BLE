@@ -18,13 +18,12 @@ package cn.com.heaton.blelibrary.ble;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.le.ScanFilter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.support.annotation.IntRange;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.RequiresApi;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,11 +40,9 @@ import cn.com.heaton.blelibrary.ble.callback.BleStatusCallback;
 import cn.com.heaton.blelibrary.ble.callback.BleWriteCallback;
 import cn.com.heaton.blelibrary.ble.callback.BleWriteDescCallback;
 import cn.com.heaton.blelibrary.ble.callback.BleWriteEntityCallback;
-import cn.com.heaton.blelibrary.ble.callback.wrapper.BleWrapperCallback;
 import cn.com.heaton.blelibrary.ble.callback.wrapper.BluetoothChangedObserver;
 import cn.com.heaton.blelibrary.ble.exception.BleException;
 import cn.com.heaton.blelibrary.ble.model.BleDevice;
-import cn.com.heaton.blelibrary.ble.model.BleFactory;
 import cn.com.heaton.blelibrary.ble.model.EntityData;
 import cn.com.heaton.blelibrary.ble.queue.reconnect.DefaultReConnectHandler;
 import cn.com.heaton.blelibrary.ble.queue.RequestTask;

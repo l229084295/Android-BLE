@@ -4,20 +4,13 @@ import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -28,9 +21,21 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.example.admin.mybledemo.BleRssiDevice;
 import com.example.admin.mybledemo.R;
 import com.example.admin.mybledemo.adapter.ScanAdapter;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.hjq.permissions.OnPermissionCallback;
+import com.hjq.permissions.XXPermissions;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,18 +46,12 @@ import cn.com.heaton.blelibrary.ble.callback.BleScanCallback;
 import cn.com.heaton.blelibrary.ble.callback.BleStatusCallback;
 import cn.com.heaton.blelibrary.ble.model.ScanRecord;
 import cn.com.heaton.blelibrary.ble.utils.Utils;
-import cn.com.superLei.aoparms.annotation.Permission;
-import cn.com.superLei.aoparms.annotation.PermissionDenied;
-import cn.com.superLei.aoparms.annotation.PermissionNoAskDenied;
-import cn.com.superLei.aoparms.common.permission.AopPermissionUtils;
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
 public class BleActivity extends AppCompatActivity {
     private String TAG = BleActivity.class.getSimpleName();
-    public static final int REQUEST_PERMISSION_LOCATION = 2;
-    public static final int REQUEST_PERMISSION_WRITE = 3;
     public static final int REQUEST_GPS = 4;
     private LinearLayout llBlutoothAdapterTip;
     private TextView tvAdapterStates;
@@ -138,30 +137,33 @@ public class BleActivity extends AppCompatActivity {
     }
 
     //请求权限
-    @Permission(value = {Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION},
-            requestCode = REQUEST_PERMISSION_LOCATION,
-            rationale = "需要蓝牙相关权限")
     public void requestPermission() {
-        checkBlueStatus();
-    }
-
-    @PermissionDenied
-    public void permissionDenied(int requestCode, List<String> denyList) {
-        if (requestCode == REQUEST_PERMISSION_LOCATION) {
-            Log.e(TAG, "permissionDenied>>>:定位权限被拒 " + denyList.toString());
-        } else if (requestCode == REQUEST_PERMISSION_WRITE) {
-            Log.e(TAG, "permissionDenied>>>:读写权限被拒 " + denyList.toString());
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN);
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
         }
-    }
+        XXPermissions.with(this)
+                .permission(permissions)
+                        .request(new OnPermissionCallback() {
+                            @Override
+                            public void onGranted(@NonNull List<String> permissions, boolean allGranted) {
+                                if (allGranted) {
+                                    checkBlueStatus();
+                                }
+                            }
 
-    @PermissionNoAskDenied
-    public void permissionNoAskDenied(int requestCode, List<String> denyNoAskList) {
-        if (requestCode == REQUEST_PERMISSION_LOCATION) {
-            Log.e(TAG, "permissionNoAskDenied 定位权限被拒>>>: " + denyNoAskList.toString());
-        } else if (requestCode == REQUEST_PERMISSION_WRITE) {
-            Log.e(TAG, "permissionDenied>>>:读写权限被拒>>> " + denyNoAskList.toString());
-        }
-        AopPermissionUtils.showGoSetting(this, "为了更好的体验，建议前往设置页面打开权限");
+                            @Override
+                            public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
+                                OnPermissionCallback.super.onDenied(permissions, doNotAskAgain);
+                                if (doNotAskAgain) {
+                                    // 如果是被永久拒绝就跳转到应用权限系统设置页面
+                                } else {
+                                }
+                            }
+                        });
     }
 
     //监听蓝牙开关状态
@@ -236,7 +238,9 @@ public class BleActivity extends AppCompatActivity {
                         return;
                     }
                 }
-                device.setScanRecord(ScanRecord.parseFromBytes(scanRecord));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    device.setScanRecord(ScanRecord.parseFromBytes(scanRecord));
+                }
                 device.setRssi(rssi);
                 bleRssiDevices.add(device);
                 adapter.notifyDataSetChanged();
@@ -273,7 +277,9 @@ public class BleActivity extends AppCompatActivity {
 
     public void stopBannerLoadingAnim() {
         floatingActionButton.setImageResource(R.drawable.ic_bluetooth_audio_black_24dp);
-        animator.cancel();
+        if (animator!=null){
+            animator.cancel();
+        }
         floatingActionButton.setRotation(0);
     }
 
@@ -289,17 +295,10 @@ public class BleActivity extends AppCompatActivity {
             case R.id.menu_introduced:
                 startActivity(new Intent(BleActivity.this, IntroducedActivity.class));
                 break;
-            case R.id.menu_share:
-                com.example.admin.mybledemo.Utils.shareAPK(this);
-                break;
-            case R.id.menu_contribute:
-                ImageView imageView = new ImageView(this);
-                imageView.setImageResource(R.drawable.wechat);
-                new AlertDialog.Builder(BleActivity.this)
-                        .setTitle("打赏/联系作者")
-                        .setView(imageView)
-                        .create()
-                        .show();
+            case R.id.openDoor:
+                Intent intent = new Intent(BleActivity.this, OpenDoorActivity.class);
+                intent.putExtra("macAddress","21DCAA009469");
+                startActivity(intent);
                 break;
         }
         return super.onOptionsItemSelected(item);

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Android BLE Demo</string>
+    <string name="app_name">Android BLE</string>
 
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>
@@ -17,6 +17,7 @@
 
 
     <!-- Menu items -->
+    <string name="menu_openDoor">开门</string>
     <string name="menu_introduced">错误码相关</string>
     <string name="menu_disconnect_all">断开所有设备</string>
     <string name="menu_connect_all">连接所有设备</string>

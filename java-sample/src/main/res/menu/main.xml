@@ -3,10 +3,9 @@
     <item android:id="@+id/menu_introduced"
         android:title="@string/menu_introduced"
         app:showAsAction="never"/>
-    <item android:id="@+id/menu_share"
-        android:title="@string/menu_share"
-        app:showAsAction="never"/>
-    <item android:id="@+id/menu_contribute"
-        android:title="@string/menu_contribute"
-        app:showAsAction="never" />
+    <item
+        android:id="@+id/openDoor"
+        android:title="@string/menu_openDoor"
+        app:showAsAction="never"
+        />
 </menu>

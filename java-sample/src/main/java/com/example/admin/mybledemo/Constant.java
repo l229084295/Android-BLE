@@ -9,11 +9,16 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class Constant {
 
+    public static String OPEN_DOOR_SUCCESS = "025801015a";
+    public static String OPEN_DOOR_FAILURE = "0258fefe5a";
+
     /**
      * SharePreferences常量保存类
      */
     public interface SP {
         String OTA_FILE_EXIST = "ota_file_exist";//ota文件是否存在
+
+        String MAC_ADDRESS_HISTORY = "mac_address_history";//蓝牙mac地址历史
     }
 
     //全局静态常量

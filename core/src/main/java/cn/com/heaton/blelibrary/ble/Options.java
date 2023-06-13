@@ -10,15 +10,14 @@ package cn.com.heaton.blelibrary.ble;
 import android.bluetooth.le.ScanFilter;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.IntRange;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.IntRange;
+import androidx.annotation.RequiresApi;
 
 import java.util.UUID;
 
 import cn.com.heaton.blelibrary.ble.callback.wrapper.BleWrapperCallback;
 import cn.com.heaton.blelibrary.ble.model.BleDevice;
 import cn.com.heaton.blelibrary.ble.model.BleFactory;
-import cn.com.heaton.blelibrary.ble.queue.reconnect.IReconnectStrategy;
 
 /**
  * 蓝牙相关参数配置类
