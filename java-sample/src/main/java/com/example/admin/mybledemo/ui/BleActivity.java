@@ -211,7 +211,7 @@ public class BleActivity extends AppCompatActivity {
                     .create()
                     .show();
         }else {
-            ble.startScan(scanCallback);
+//            ble.startScan(scanCallback);
         }
     }
 

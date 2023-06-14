@@ -46,6 +46,7 @@ import cn.com.heaton.blelibrary.ble.callback.BleNotifyCallback;
 import cn.com.heaton.blelibrary.ble.callback.BleWriteCallback;
 import cn.com.heaton.blelibrary.ble.model.BleDevice;
 import cn.com.heaton.blelibrary.ble.utils.ByteUtils;
+import cn.com.heaton.blelibrary.ble.utils.ThreadUtils;
 import cn.com.heaton.blelibrary.ble.utils.UuidUtils;
 
 public class Utils {
@@ -364,13 +365,15 @@ public class Utils {
                     String uuid = g.getUuid().toString().toUpperCase();
                     Log.d(TAG, "uuid:" + uuid);
                     sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid);
+                    sendOpenDoorMessage("服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")));
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
+                            sendOpenDoorMessage("轮询写入特征值：" + bc.getUuid());
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                             if (canRead && canWrite) {
                                 //开始写入
-                                Ble.getInstance().writeByUuid(
+                                boolean writeResult = Ble.getInstance().writeByUuid(
                                         device,
                                         data,
                                         g.getUuid(),
@@ -379,14 +382,44 @@ public class Utils {
                                             @Override
                                             public void onWriteSuccess(BleDevice device, BluetoothGattCharacteristic characteristic) {
                                                 sendOpenDoorMessage("写入特征成功:" + device.getBleName());
-                                                Utils.showToast("写入特征成功");
                                             }
 
                                             @Override
                                             public void onWriteFailed(BleDevice device, int failedCode) {
                                                 super.onWriteFailed(device, failedCode);
                                                 sendOpenDoorMessage("写入特征失败:" + failedCode);
-                                                Utils.showToast("写入特征失败:" + failedCode);
+                                            }
+                                        });
+                                sendOpenDoorMessage("写入特征返回：" + writeResult);
+                                Ble.getInstance().enableNotifyByUuid(
+                                        device,
+                                        true,
+                                        g.getUuid(),
+                                        bc.getUuid(),
+                                        new BleNotifyCallback<BleDevice>() {
+                                            @Override
+                                            public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
+                                                sendOpenDoorMessage("收到"+device.getBleName()+"的回复：" + ByteUtils.toHexString(characteristic.getValue()));
+                                                runOnUiThread(() -> {
+                                                    String value = ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase();
+                                                    if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
+                                                        ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
+                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
+                                                        AppUtils.exitApp();
+                                                    } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
+                                                        ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
+                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
+                                                    } else {
+                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
+                                                        Log.d(TAG, String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
+                                                    }
+                                                });
+                                            }
+
+                                            @Override
+                                            public void onNotifySuccess(BleDevice device) {
+                                                super.onNotifySuccess(device);
+                                                sendOpenDoorMessage("订阅通知成功");
                                             }
                                         });
                             }
