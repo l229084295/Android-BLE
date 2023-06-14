@@ -367,6 +367,7 @@ public class Utils {
                     sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid);
                     sendOpenDoorMessage("服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")));
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
+                        sendOpenDoorMessage("轮询写入特征值，特征值数量：" + g.getCharacteristics().size());
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
                             sendOpenDoorMessage("轮询写入特征值：" + bc.getUuid());
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
@@ -424,10 +425,12 @@ public class Utils {
                                         });
                             }
                         }
+                    }else {
+                        sendOpenDoorMessage("");
                     }
                 }
             } catch (Exception e) {
-                sendOpenDoorMessage("openDoor onServicesDiscovered:" + Log.getStackTraceString(e));
+                sendOpenDoorMessage("openDoor onError:" + Log.getStackTraceString(e));
                 e.printStackTrace();
             }
         }
