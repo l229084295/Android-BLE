@@ -369,10 +369,11 @@ public class Utils {
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
                         sendOpenDoorMessage("轮询写入特征值，特征值数量：" + g.getCharacteristics().size());
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
-                            sendOpenDoorMessage("轮询写入特征值：" + bc.getUuid());
+                            sendOpenDoorMessage("轮询写入特征值：" + bc.getUuid() + ",canRead:" + (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) + ",canWrite:" + (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE));
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                             if (canRead && canWrite) {
+                                sendOpenDoorMessage("开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid());
                                 //开始写入
                                 boolean writeResult = Ble.getInstance().writeByUuid(
                                         device,
@@ -391,7 +392,7 @@ public class Utils {
                                                 sendOpenDoorMessage("写入特征失败:" + failedCode);
                                             }
                                         });
-                                sendOpenDoorMessage("写入特征返回：" + writeResult);
+                                sendOpenDoorMessage("============写入特征返回：" + writeResult);
                                 Ble.getInstance().enableNotifyByUuid(
                                         device,
                                         true,
@@ -406,7 +407,7 @@ public class Utils {
                                                     if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
                                                         ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
                                                         sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
-                                                        AppUtils.exitApp();
+//                                                        AppUtils.exitApp();
                                                     } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
                                                         ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
                                                         sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
@@ -451,7 +452,7 @@ public class Utils {
                         if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
                             ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
                             sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
-                            AppUtils.exitApp();
+//                            AppUtils.exitApp();
                         } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
                             ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
                             sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
