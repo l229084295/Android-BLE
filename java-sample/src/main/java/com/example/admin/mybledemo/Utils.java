@@ -21,6 +21,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.blankj.utilcode.util.AppUtils;
+import com.blankj.utilcode.util.ConvertUtils;
 import com.blankj.utilcode.util.EncryptUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.example.admin.mybledemo.data.MyEvent;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -272,6 +274,11 @@ public class Utils {
     private static final String TAG = "createOpenDoorData";
     private static byte[] data = new byte[]{};
 
+    /**
+     * 生成开门数据
+     * @param macAddress
+     * @return
+     */
     public static String createOpenDoorData(String macAddress) {
         String data = "";
         String y, mon, d, h, m, timeStr;
@@ -312,7 +319,7 @@ public class Utils {
 
     // key:0000000000 + mac 后六位
     private static String cryptByDes(String key, String content) {
-        String crypt = EncryptUtils.encrypt3DES2HexString(content.getBytes(), ByteUtils.hexStr2Bytes(key), "DESede/ECB/PKCS5Padding", null);
+        String crypt = EncryptUtils.encrypt3DES2HexString(ByteUtils.hexStr2Bytes(content), ByteUtils.hexStr2Bytes(key), "DESede/ECB/PKCS5Padding", null);
         Log.d("crypt", crypt);
         return crypt;
     }
