@@ -372,15 +372,15 @@ public class Utils {
                     String uuid = g.getUuid().toString().toUpperCase();
                     Log.d(TAG, "uuid:" + uuid);
                     sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid);
-                    sendOpenDoorMessage("服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")));
+                    sendOpenDoorMessage("=>服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")));
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
-                        sendOpenDoorMessage("轮询写入特征值，特征值数量：" + g.getCharacteristics().size());
+                        sendOpenDoorMessage("==>轮询写入特征值，特征值数量：" + g.getCharacteristics().size());
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
-                            sendOpenDoorMessage("轮询写入特征值：" + bc.getUuid() + ",canRead:" + (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) + ",canWrite:" + (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE));
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
-                            if (canRead && canWrite) {
-                                sendOpenDoorMessage("开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid());
+                            sendOpenDoorMessage("===>轮询写入特征值：" + bc.getUuid() + " ,canRead: " + canRead + " ,canWrite: " + canWrite);
+                            if (canWrite) {
+                                sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid());
                                 //开始写入
                                 boolean writeResult = Ble.getInstance().writeByUuid(
                                         device,
@@ -399,7 +399,7 @@ public class Utils {
                                                 sendOpenDoorMessage("写入特征失败:" + failedCode);
                                             }
                                         });
-                                sendOpenDoorMessage("============写入特征返回：" + writeResult);
+                                sendOpenDoorMessage("=====>写入特征返回：" + writeResult);
                                 Ble.getInstance().enableNotifyByUuid(
                                         device,
                                         true,
