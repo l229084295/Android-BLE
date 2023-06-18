@@ -380,6 +380,7 @@ public class Utils {
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                             sendOpenDoorMessage("===>轮询写入特征值：" + bc.getUuid() + " ,canRead: " + canRead + " ,canWrite: " + canWrite);
                             if (canWrite) {
+                                Thread.sleep(500);
                                 sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid());
                                 //开始写入
                                 boolean writeResult = Ble.getInstance().writeByUuid(
