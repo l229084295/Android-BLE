@@ -1,6 +1,7 @@
 package com.example.admin.mybledemo;
 
 import static com.blankj.utilcode.util.ThreadUtils.runOnUiThread;
+import static com.blankj.utilcode.util.ThreadUtils.runOnUiThreadDelayed;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothGatt;
@@ -12,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
@@ -276,6 +278,7 @@ public class Utils {
 
     /**
      * 生成开门数据
+     *
      * @param macAddress
      * @return
      */
@@ -307,9 +310,9 @@ public class Utils {
         Log.d(TAG, "content:" + content);
         Log.d(TAG, "key:" + key);
         Log.d(TAG, "data:" + data);
-        sendOpenDoorMessage("content:" + content);
-        sendOpenDoorMessage("key:" + key);
-        sendOpenDoorMessage("data:" + data);
+        sendOpenDoorMessage("content:" + content,Color.BLACK);
+        sendOpenDoorMessage("key:" + key,Color.BLACK);
+        sendOpenDoorMessage("data:" + data,Color.BLACK);
         return data.toUpperCase();
     }
 
@@ -328,18 +331,18 @@ public class Utils {
         try {
             for (BleRssiDevice d : devices) {
                 if (d.getBleName() != null && d.getBleName().equals(macAddress)) {
-                    sendOpenDoorMessage("命中目标，开始开锁");
+                    sendOpenDoorMessage("命中目标，开始开锁", Color.GREEN);
                     data = ByteUtils.hexStr2Bytes(createOpenDoorData(macAddress));
                     Ble<BleDevice> ble = Ble.getInstance();
                     if (ble.isScanning()) {
                         ble.stopScan();
                     }
                     ble.connect(d, connectCallback);
-                    sendOpenDoorMessage("开始连接蓝牙：" + d.getBleName());
+                    sendOpenDoorMessage("开始连接蓝牙：" + d.getBleName(), Color.GREEN);
                 }
             }
         } catch (Exception e) {
-            sendOpenDoorMessage("openDoor step1:" + Log.getStackTraceString(e));
+            sendOpenDoorMessage("openDoor step1:" + Log.getStackTraceString(e), Color.RED);
             e.printStackTrace();
         }
     }
@@ -354,7 +357,7 @@ public class Utils {
         @Override
         public void onConnectFailed(BleDevice device, int errorCode) {
             super.onConnectFailed(device, errorCode);
-            sendOpenDoorMessage("连接异常，异常状态码:" + errorCode);
+            sendOpenDoorMessage("连接异常，异常状态码:" + errorCode, Color.RED);
             Utils.showToast("连接异常，异常状态码:" + errorCode);
         }
 
@@ -371,75 +374,89 @@ public class Utils {
                 for (BluetoothGattService g : gatt.getServices()) {//轮询蓝牙下的服务
                     String uuid = g.getUuid().toString().toUpperCase();
                     Log.d(TAG, "uuid:" + uuid);
-                    sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid);
-                    sendOpenDoorMessage("=>服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")));
+                    sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid, Color.YELLOW);
+                    sendOpenDoorMessage("=>服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")), Color.YELLOW);
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
-                        sendOpenDoorMessage("==>轮询写入特征值，特征值数量：" + g.getCharacteristics().size());
+                        sendOpenDoorMessage("==>轮询写入特征值，特征值数量：" + g.getCharacteristics().size(), Color.YELLOW);
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                             sendOpenDoorMessage("===>轮询写入特征值：" + bc.getUuid() + " ,canRead: " + canRead + " ,canWrite: " + canWrite);
                             if (canWrite) {
-                                Thread.sleep(500);
-                                sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid());
+                                sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid(), Color.YELLOW);
+                                sendOpenDoorMessage("====>开始写入数据,Thread name：" + Thread.currentThread().getName(), Color.YELLOW);
                                 //开始写入
-                                boolean writeResult = Ble.getInstance().writeByUuid(
-                                        device,
-                                        data,
-                                        g.getUuid(),
-                                        bc.getUuid(),
-                                        new BleWriteCallback<BleDevice>() {
-                                            @Override
-                                            public void onWriteSuccess(BleDevice device, BluetoothGattCharacteristic characteristic) {
-                                                sendOpenDoorMessage("写入特征成功:" + device.getBleName());
-                                            }
+                                runOnUiThreadDelayed(() -> {
+                                    boolean writeResult = Ble.getInstance().writeByUuid(
+                                            device,
+                                            data,
+                                            g.getUuid(),
+                                            bc.getUuid(),
+                                            new BleWriteCallback<BleDevice>() {
+                                                @Override
+                                                public void onWriteSuccess(BleDevice device, BluetoothGattCharacteristic characteristic) {
+                                                    sendOpenDoorMessage("写入特征成功:" + device.getBleName(), Color.GREEN);
+                                                }
 
-                                            @Override
-                                            public void onWriteFailed(BleDevice device, int failedCode) {
-                                                super.onWriteFailed(device, failedCode);
-                                                sendOpenDoorMessage("写入特征失败:" + failedCode);
-                                            }
-                                        });
-                                sendOpenDoorMessage("=====>写入特征返回：" + writeResult);
-                                Ble.getInstance().enableNotifyByUuid(
-                                        device,
-                                        true,
-                                        g.getUuid(),
-                                        bc.getUuid(),
-                                        new BleNotifyCallback<BleDevice>() {
-                                            @Override
-                                            public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
-                                                sendOpenDoorMessage("收到"+device.getBleName()+"的回复：" + ByteUtils.toHexString(characteristic.getValue()));
-                                                runOnUiThread(() -> {
-                                                    String value = ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase();
-                                                    if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
-                                                        ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
-                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
+                                                @Override
+                                                public void onWriteFailed(BleDevice device, int failedCode) {
+                                                    super.onWriteFailed(device, failedCode);
+                                                    sendOpenDoorMessage("写入特征失败:" + failedCode, Color.RED);
+                                                }
+                                            });
+                                    sendOpenDoorMessage("=====>写入特征返回：" + writeResult, Color.BLUE);
+                                }, 1000);
+                                runOnUiThreadDelayed(() -> {
+                                    Ble.getInstance().enableNotifyByUuid(
+                                            device,
+                                            true,
+                                            g.getUuid(),
+                                            bc.getUuid(),
+                                            new BleNotifyCallback<BleDevice>() {
+                                                @Override
+                                                public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
+                                                    sendOpenDoorMessage("收到" + device.getBleName() + "的回复：" + ByteUtils.toHexString(characteristic.getValue()), Color.DKGRAY,12);
+                                                    runOnUiThread(() -> {
+                                                        String value = ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase();
+                                                        if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
+                                                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
+                                                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"), Color.GREEN);
 //                                                        AppUtils.exitApp();
-                                                    } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
-                                                        ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
-                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
-                                                    } else {
-                                                        sendOpenDoorMessage(String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
-                                                        Log.d(TAG, String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
-                                                    }
-                                                });
-                                            }
+                                                        } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
+                                                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
+                                                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"), Color.RED);
+                                                        } else {
+                                                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()), Color.DKGRAY,12);
+                                                            Log.d(TAG, String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
+                                                        }
+                                                    });
+                                                }
 
-                                            @Override
-                                            public void onNotifySuccess(BleDevice device) {
-                                                super.onNotifySuccess(device);
-                                                sendOpenDoorMessage("订阅通知成功");
-                                            }
-                                        });
+                                                @Override
+                                                public void onNotifySuccess(BleDevice device) {
+                                                    super.onNotifySuccess(device);
+                                                    sendOpenDoorMessage("订阅通知成功", Color.GREEN);
+                                                }
+
+                                                @Override
+                                                public void onNotifyFailed(BleDevice device, int failedCode) {
+                                                    super.onNotifyFailed(device, failedCode);
+                                                    sendOpenDoorMessage(device.getBleName() + " 设置通知失败：" + failedCode, Color.RED);
+                                                }
+
+                                                @Override
+                                                public void onNotifyCanceled(BleDevice device) {
+                                                    super.onNotifyCanceled(device);
+                                                    sendOpenDoorMessage(device.getBleName() + " 取消设置通知", Color.RED);
+                                                }
+                                            });
+                                }, 500);
                             }
                         }
-                    }else {
-                        sendOpenDoorMessage("");
                     }
                 }
             } catch (Exception e) {
-                sendOpenDoorMessage("openDoor onError:" + Log.getStackTraceString(e));
+                sendOpenDoorMessage("openDoor onError:" + Log.getStackTraceString(e), Color.RED);
                 e.printStackTrace();
             }
         }
@@ -448,42 +465,51 @@ public class Utils {
         public void onReady(BleDevice device) {
             super.onReady(device);
             //连接成功后，设置通知
-            Ble.getInstance().enableNotify(device, true, new BleNotifyCallback<BleDevice>() {
-                @Override
-                public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
-                    UUID uuid = characteristic.getUuid();
-                    BleLog.e(TAG, "onChanged==uuid:" + uuid.toString());
-                    sendOpenDoorMessage("onChanged==uuid:" + uuid);
-                    BleLog.e(TAG, "onChanged==data:" + ByteUtils.toHexString(characteristic.getValue()));
-                    runOnUiThread(() -> {
-                        String value = ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase();
-                        if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
-                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
-                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
-//                            AppUtils.exitApp();
-                        } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
-                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
-                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
-                        } else {
-                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
-                            Log.d(TAG, String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
-//                                ToastUtils.showShort(String.format("收到设备通知数据: %s", ByteUtils.toHexString(characteristic.getValue())));
-                        }
-                    });
-                }
-
-                @Override
-                public void onNotifySuccess(BleDevice device) {
-                    super.onNotifySuccess(device);
-                    sendOpenDoorMessage("通知成功：" + device.getBleName());
-                    BleLog.e(TAG, "onNotifySuccess: " + device.getBleName());
-                }
-            });
+//            Ble.getInstance().enableNotify(device, true, new BleNotifyCallback<BleDevice>() {
+//                @Override
+//                public void onChanged(BleDevice device, BluetoothGattCharacteristic characteristic) {
+//                    UUID uuid = characteristic.getUuid();
+//                    BleLog.e(TAG, "onChanged==uuid:" + uuid.toString());
+//                    sendOpenDoorMessage("onChanged==uuid:" + uuid);
+//                    BleLog.e(TAG, "onChanged==data:" + ByteUtils.toHexString(characteristic.getValue()));
+//                    runOnUiThread(() -> {
+//                        String value = ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase();
+//                        if (Constant.OPEN_DOOR_SUCCESS.equals(value)) {
+//                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门成功"));
+//                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门成功"));
+////                            AppUtils.exitApp();
+//                        } else if (Constant.OPEN_DOOR_FAILURE.equals(value)) {
+//                            ToastUtils.showShort(String.format("收到设备通知数据: %s", "开门失败"));
+//                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", "开门失败"));
+//                        } else {
+//                            sendOpenDoorMessage(String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
+//                            Log.d(TAG, String.format("收到设备通知数据: %s", ByteUtils.bytes2HexStr(characteristic.getValue()).toLowerCase()));
+////                                ToastUtils.showShort(String.format("收到设备通知数据: %s", ByteUtils.toHexString(characteristic.getValue())));
+//                        }
+//                    });
+//                }
+//
+//                @Override
+//                public void onNotifySuccess(BleDevice device) {
+//                    super.onNotifySuccess(device);
+//                    sendOpenDoorMessage("通知成功：" + device.getBleName());
+//                    BleLog.e(TAG, "onNotifySuccess: " + device.getBleName());
+//                }
+//            });
         }
     };
 
     public static void sendOpenDoorMessage(String message) {
         EventBus.getDefault().post(new MyEvent(message));
     }
+
+    public static void sendOpenDoorMessage(String message, int color) {
+        EventBus.getDefault().post(new MyEvent(message, color));
+    }
+
+    public static void sendOpenDoorMessage(String message, int color, int textSize) {
+        EventBus.getDefault().post(new MyEvent(message, color, textSize));
+    }
+
 
 }

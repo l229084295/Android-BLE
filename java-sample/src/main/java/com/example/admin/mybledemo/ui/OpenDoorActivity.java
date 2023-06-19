@@ -7,12 +7,17 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.Layout;
+import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.CharacterStyle;
+import android.text.style.UpdateAppearance;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,8 +27,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.MediaController;
 import android.widget.TextView;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -32,6 +39,7 @@ import androidx.constraintlayout.solver.widgets.analyzer.DependencyGraph;
 import androidx.core.widget.NestedScrollView;
 
 import com.blankj.utilcode.util.SPUtils;
+import com.blankj.utilcode.util.SpanUtils;
 import com.blankj.utilcode.util.TimeUtils;
 import com.example.admin.mybledemo.BleRssiDevice;
 import com.example.admin.mybledemo.Constant;
@@ -175,7 +183,7 @@ public class OpenDoorActivity extends AppCompatActivity {
                     @Override
                     public void onGranted(@NonNull List<String> permissions, boolean allGranted) {
                         if (allGranted) {
-                            addMessage("蓝牙相关权限已获取");
+                            addMessage("蓝牙相关权限已获取",Color.GREEN);
                             checkBlueStatus();
                         }
                     }
@@ -185,7 +193,7 @@ public class OpenDoorActivity extends AppCompatActivity {
                         OnPermissionCallback.super.onDenied(permissions, doNotAskAgain);
                         if (doNotAskAgain) {
                             // 如果是被永久拒绝就跳转到应用权限系统设置页面
-                            addMessage("蓝牙相关权限被永久拒绝，请前往设置");
+                            addMessage("蓝牙相关权限被永久拒绝，请前往设置",Color.RED);
                         } else {
                         }
                     }
@@ -241,7 +249,7 @@ public class OpenDoorActivity extends AppCompatActivity {
                     device.setScanRecord(ScanRecord.parseFromBytes(scanRecord));
                 }
                 device.setRssi(rssi);
-                addMessage("搜索到蓝牙，deviceName: " + device.getBleName() + ",mac: " + device.getBleAddress());
+                addMessage("搜索到蓝牙，deviceName: " + device.getBleName() + ",mac: " + device.getBleAddress(), Color.parseColor("#999999"));
                 bleRssiDevices.add(device);
                 if (macAddress != null &&
                         macAddress.length() == 12 &&
@@ -250,7 +258,7 @@ public class OpenDoorActivity extends AppCompatActivity {
                     //开始开门
                     com.example.admin.mybledemo.Utils.openDoor(macAddress, bleRssiDevices);
                 } else {
-                    addMessage("mac地址不正确");
+                    addMessage("mac地址不正确", Color.RED);
                 }
             }
         }
@@ -276,14 +284,22 @@ public class OpenDoorActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(MyEvent event) {
-        addMessage(event.message);
+        addMessage(event.message, event.color, event.textSize);
     }
 
     private void addMessage(String message) {
+        addMessage(message, getResources().getColor(R.color.colorPrimary), 14);
+    }
+
+    private void addMessage(String message, int color) {
+        addMessage(message, color, 14);
+    }
+
+    private void addMessage(String message, int color, int textSize) {
         if (info == null) return;
-        info.append(TimeUtils.date2String(new Date(), "yyyy-dd-MM HH:mm:ss："));
+        info.append(getSpan(TimeUtils.date2String(new Date(), "yyyy-dd-MM HH:mm:ss："), Color.parseColor("#333333"), 12));
         info.append("\n");
-        info.append(message);
+        info.append(getSpan(message, color, textSize));
         info.append("\n");
     }
 
@@ -300,5 +316,30 @@ public class OpenDoorActivity extends AppCompatActivity {
         String macHistory = SPUtils.getInstance().getString(Constant.SP.MAC_ADDRESS_HISTORY);
         macHistory.split(",");
         return new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, macHistory.split(","));
+    }
+
+    private SpannableStringBuilder getSpan(String message, @ColorInt int color, int size) {
+        SpanUtils s = new SpanUtils();
+        s.append(message).setFontSize(size, true).setSpans(new ForegroundAlphaColorSpan(color));
+        return s.create();
+    }
+
+    static class ForegroundAlphaColorSpan extends CharacterStyle implements UpdateAppearance {
+
+        @ColorInt
+        int mColor;
+
+        public ForegroundAlphaColorSpan(int mColor) {
+            this.mColor = mColor;
+        }
+
+        void setAlpha(int alpha) {
+            mColor = Color.argb(alpha, Color.red(mColor), Color.green(mColor), Color.blue(mColor));
+        }
+
+        @Override
+        public void updateDrawState(TextPaint tp) {
+            tp.setColor(mColor);
+        }
     }
 }
