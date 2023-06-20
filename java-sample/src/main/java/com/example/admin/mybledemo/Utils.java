@@ -374,17 +374,17 @@ public class Utils {
                 for (BluetoothGattService g : gatt.getServices()) {//轮询蓝牙下的服务
                     String uuid = g.getUuid().toString().toUpperCase();
                     Log.d(TAG, "uuid:" + uuid);
-                    sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid, Color.YELLOW);
-                    sendOpenDoorMessage("=>服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")), Color.YELLOW);
+                    sendOpenDoorMessage("轮询蓝牙服务uuid：" + uuid, Color.parseColor("#f43e06"));
+                    sendOpenDoorMessage("=>服务类型：" + g.getType() + ",uuid是否包含FFF0:" + (uuid.contains("FFF0")), Color.parseColor("#f43e06"));
                     if (g.getType() == BluetoothGattService.SERVICE_TYPE_PRIMARY && uuid.contains("FFF0")) {
-                        sendOpenDoorMessage("==>轮询写入特征值，特征值数量：" + g.getCharacteristics().size(), Color.YELLOW);
+                        sendOpenDoorMessage("==>轮询写入特征值，特征值数量：" + g.getCharacteristics().size(), Color.parseColor("#f43e06"));
                         for (BluetoothGattCharacteristic bc : g.getCharacteristics()) {//轮询特征值
                             boolean canRead = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0;
                             boolean canWrite = (bc.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                             sendOpenDoorMessage("===>轮询写入特征值：" + bc.getUuid() + " ,canRead: " + canRead + " ,canWrite: " + canWrite);
                             if (canWrite) {
-                                sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid(), Color.YELLOW);
-                                sendOpenDoorMessage("====>开始写入数据,Thread name：" + Thread.currentThread().getName(), Color.YELLOW);
+                                sendOpenDoorMessage("====>开始写入数据,deviceName：" + device.getBleName() + ",data: " + ByteUtils.bytes2HexStr(data) + ",uuid:" + g.getUuid() + ",CharacteristicsUUid:" + bc.getUuid(), Color.parseColor("#f43e06"));
+                                sendOpenDoorMessage("====>开始写入数据,Thread name：" + Thread.currentThread().getName(), Color.parseColor("#f43e06"));
                                 //开始写入
                                 runOnUiThreadDelayed(() -> {
                                     boolean writeResult = Ble.getInstance().writeByUuid(
@@ -407,6 +407,7 @@ public class Utils {
                                     sendOpenDoorMessage("=====>写入特征返回：" + writeResult, Color.BLUE);
                                 }, 1000);
                                 runOnUiThreadDelayed(() -> {
+                                    sendOpenDoorMessage("开始设置通知");
                                     Ble.getInstance().enableNotifyByUuid(
                                             device,
                                             true,
