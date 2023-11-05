@@ -17,7 +17,8 @@
 
 
     <!-- Menu items -->
-    <string name="menu_openDoor">开门</string>
+    <string name="menu_openDoor1">开小区门</string>
+    <string name="menu_openDoor2">开4单元门</string>
     <string name="menu_introduced">错误码相关</string>
     <string name="menu_disconnect_all">断开所有设备</string>
     <string name="menu_connect_all">连接所有设备</string>

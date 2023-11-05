@@ -3,10 +3,12 @@ package com.example.admin.mybledemo.ui;
 import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +25,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -53,6 +56,7 @@ import cn.com.heaton.blelibrary.ble.utils.Utils;
 public class BleActivity extends AppCompatActivity {
     private String TAG = BleActivity.class.getSimpleName();
     public static final int REQUEST_GPS = 4;
+    public static final int REQUEST_CONNECT = 5;
     private LinearLayout llBlutoothAdapterTip;
     private TextView tvAdapterStates;
     private SwipeRefreshLayout swipeLayout;
@@ -81,7 +85,7 @@ public class BleActivity extends AppCompatActivity {
         bleRssiDevices = new ArrayList<>();
         adapter = new ScanAdapter(this, bleRssiDevices);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        recyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL));
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         recyclerView.getItemAnimator().setChangeDuration(300);
         recyclerView.getItemAnimator().setMoveDuration(300);
         recyclerView.setAdapter(adapter);
@@ -113,12 +117,17 @@ public class BleActivity extends AppCompatActivity {
                 isFilter = false;
             }
         });
-        tvAdapterStates.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, Ble.REQUEST_ENABLE_BT);
+        tvAdapterStates.setOnClickListener(v -> {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(BleActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT},REQUEST_CONNECT);
+                    }
+                }
+                return;
             }
+            startActivityForResult(enableBtIntent, Ble.REQUEST_ENABLE_BT);
         });
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -291,12 +300,18 @@ public class BleActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
         switch (item.getItemId()) {
             case R.id.menu_introduced:
                 startActivity(new Intent(BleActivity.this, IntroducedActivity.class));
                 break;
-            case R.id.openDoor:
-                Intent intent = new Intent(BleActivity.this, OpenDoorActivity.class);
+            case R.id.openDoor1:
+                intent = new Intent(BleActivity.this, OpenDoorActivity.class);
+                intent.putExtra("macAddress","FE19EC001407");
+                startActivity(intent);
+                break;
+            case R.id.openDoor2:
+                intent = new Intent(BleActivity.this, OpenDoorActivity.class);
                 intent.putExtra("macAddress","21DCAA009469");
                 startActivity(intent);
                 break;
@@ -304,6 +319,7 @@ public class BleActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
@@ -313,6 +329,9 @@ public class BleActivity extends AppCompatActivity {
             ble.startScan(scanCallback);
         }else if (requestCode == REQUEST_GPS){
 
+        }else if (requestCode == REQUEST_CONNECT){
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, Ble.REQUEST_ENABLE_BT);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

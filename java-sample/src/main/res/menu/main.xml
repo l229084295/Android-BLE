@@ -4,8 +4,13 @@
         android:title="@string/menu_introduced"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/openDoor"
-        android:title="@string/menu_openDoor"
+        android:id="@+id/openDoor1"
+        android:title="@string/menu_openDoor1"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/openDoor2"
+        android:title="@string/menu_openDoor2"
         app:showAsAction="never"
         />
 </menu>
