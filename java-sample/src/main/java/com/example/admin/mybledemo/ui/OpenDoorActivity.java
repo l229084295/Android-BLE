@@ -249,8 +249,10 @@ public class OpenDoorActivity extends AppCompatActivity {
                     device.setScanRecord(ScanRecord.parseFromBytes(scanRecord));
                 }
                 device.setRssi(rssi);
-                addMessage("搜索到蓝牙，deviceName: " + device.getBleName() + ",mac: " + device.getBleAddress(), Color.parseColor("#999999"));
-                bleRssiDevices.add(device);
+                addMessage("搜索到蓝牙设备，deviceName: " + device.getBleName() + ",mac: " + device.getBleAddress(), Color.parseColor("#999999"));
+                if (com.example.admin.mybledemo.Utils.isMacAddress(device.getBleName())){
+                    bleRssiDevices.add(device);
+                }
                 if (macAddress != null &&
                         macAddress.length() == 12 &&
                         com.example.admin.mybledemo.Utils.isMacAddress(macAddress)) {
@@ -258,7 +260,8 @@ public class OpenDoorActivity extends AppCompatActivity {
                     //开始开门
                     com.example.admin.mybledemo.Utils.openDoor(macAddress, bleRssiDevices);
                 } else {
-                    addMessage("mac地址不正确", Color.RED);
+                    addMessage("mac地址不正确，开始自动匹配", Color.RED);
+                    com.example.admin.mybledemo.Utils.openDoor(bleRssiDevices);
                 }
             }
         }
