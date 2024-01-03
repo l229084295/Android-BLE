@@ -59,6 +59,19 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_margin="20dp"
-        app:srcCompat="@drawable/ic_bluetooth_audio_black_24dp" />
+        app:srcCompat="@drawable/ic_bluetooth_audio_black_24dp"
+        android:contentDescription="floatingButton" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/openUnitDoor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/floatingButton"
+        android:layout_alignEnd="@id/floatingButton"
+        android:layout_marginTop="-70dp"
+        app:maxImageSize="55dp"
+        app:fabCustomSize="55dp"
+        app:srcCompat="@drawable/open_door"
+        android:contentDescription="open_door" />
 
 </RelativeLayout>

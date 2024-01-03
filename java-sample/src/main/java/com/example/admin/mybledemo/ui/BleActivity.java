@@ -61,6 +61,7 @@ public class BleActivity extends AppCompatActivity {
     private TextView tvAdapterStates;
     private SwipeRefreshLayout swipeLayout;
     private FloatingActionButton floatingActionButton;
+    private FloatingActionButton openUnitDoor;
     private RecyclerView recyclerView;
     private FilterView filterView;
     private ScanAdapter adapter;
@@ -97,6 +98,7 @@ public class BleActivity extends AppCompatActivity {
         tvAdapterStates = findViewById(R.id.tv_adapter_states);
         recyclerView = findViewById(R.id.recyclerView);
         floatingActionButton = findViewById(R.id.floatingButton);
+        openUnitDoor = findViewById(R.id.openUnitDoor);
         filterView = findViewById(R.id.filterView);
     }
 
@@ -133,6 +135,14 @@ public class BleActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 rescan();
+            }
+        });
+        openUnitDoor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BleActivity.this, OpenDoorActivity.class);
+                intent.putExtra("macAddress","21DCAA009469");
+                startActivity(intent);
             }
         });
         swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
