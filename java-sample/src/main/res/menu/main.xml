@@ -3,6 +3,11 @@
     <item android:id="@+id/menu_introduced"
         android:title="@string/menu_introduced"
         app:showAsAction="never"/>
+
+    <item android:id="@+id/menu_open_wifi_adb"
+        android:title="@string/menu_open_wifi_adb"
+        app:showAsAction="never"/>
+
     <item
         android:id="@+id/openDoor1"
         android:title="@string/menu_openDoor1"

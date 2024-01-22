@@ -31,6 +31,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.blankj.utilcode.util.ShellUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.example.admin.mybledemo.BleRssiDevice;
 import com.example.admin.mybledemo.R;
 import com.example.admin.mybledemo.adapter.ScanAdapter;
@@ -314,6 +316,10 @@ public class BleActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menu_introduced:
                 startActivity(new Intent(BleActivity.this, IntroducedActivity.class));
+                break;
+            case R.id.menu_open_wifi_adb:
+                ShellUtils.CommandResult result = ShellUtils.execCmd("adb tcpip 5555", false);
+                ToastUtils.showShort(result.toString());
                 break;
             case R.id.openDoor1:
                 intent = new Intent(BleActivity.this, OpenDoorActivity.class);
